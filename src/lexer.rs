@@ -1,96 +1,82 @@
-#[derive(Debug, PartialEq)]
-pub struct Line {
-    line: String,
+pub enum Token {
+    Label(String),
+    Mnemonic(String),
+    Register(String),
+    Immediate(i32),
+    Comment(String),
+    NewLine,
 }
 
-impl Line {
-    pub fn parse(&mut self) -> GenericInstruction {
-        let tokens = self.line.split(",").collect::<Vec<&str>>();
-        let name = tokens[0].trim().to_string();
-        let args = tokens[1..].iter().map(|s| s.trim().to_string()).collect::<Vec<String>>();
-        GenericInstruction { name, args }
-    }
+pub enum Operand {
+    Register(String),
+    Immediate(String),
+    Label(String),
 }
 
-#[derive(Debug)]
-pub struct Lexer {
-    src: Vec<Line>,
-    pos: usize,
+pub enum Instruction {
+    RType {
+        mnemonic: String,
+        rd: Operand,
+        rs: Operand,
+        rt: Operand,
+    },
+    IType {
+        mnemonic: String,
+        rd: Operand,
+        rs: Operand,
+        imm: Operand,
+    },
+    JType {
+        mnemonic: String,
+        target: String,
+    },
 }
 
-impl Lexer {
-    pub fn new(src: &str) -> Lexer {
-        let mut lines = Vec::new();
-        for line in src.lines() {
-            // strip whitespaces
-            if line.trim().is_empty() {
-                continue;
+pub struct AsmInstruction {
+    label: Option<String>,
+    instruction: Option<Instruction>,
+}
+
+pub struct AsmLexer;
+
+impl AsmLexer {
+    pub fn tokenize_line(line: &str) -> Vec<Token> {
+        let mut tokens = Vec::new();
+
+        let parts: Vec<&str> = line.split_whitespace().collect();
+
+        for i in parts {
+            // match label
+            if i.ends_with(':') {
+                tokens.push(Token::Label(i.trim_end_matches(':').to_string()));
+            // match mnemonic
+            } else if Self::is_mnemonic(i) {
+                tokens.push(Token::Mnemonic(i.to_string()));
+            // match register
+            } else if i.starts_with('$') {
+                tokens.push(Token::Register(i.to_string()));
+            // match immediate
+            } else if let Ok(value) = i.parse::<i32>() {
+                tokens.push(Token::Immediate(value));
+            // match comments
+            } else if i.starts_with('#') {
+                tokens.push(Token::Comment(i.to_string()));
+            } else if i.starts_with('\n') {
+                tokens.push(Token::NewLine);
             }
-            lines.push(Line { line: line.trim().to_string() });
         }
-        Lexer { src: lines, pos: 0 }
+        tokens
     }
 
-    pub fn next(&mut self) -> Option<&Line> {
-        if self.pos < self.src.len() {
-            let line = &self.src[self.pos];
-            self.pos += 1;
-            Some(line)
-        } else {
-            None
+    pub fn is_mnemonic(token: &str) -> bool {
+        match token {
+            "add" | "sub" | "and" | "or" | "xor" | "nor" | "slt" | "sll" | "srl" | "sra" | "jr"
+            | "addi" | "andi" | "ori" | "xori" | "slti" | "lw" | "sw" | "beq" | "bne" | "j"
+            | "jal" => true,
+            _ => false,
         }
     }
-    
-    pub fn peek(&self) -> Option<&Line> {
-        if self.pos < self.src.len() {
-            Some(&self.src[self.pos])
-        } else {
-            None
-        }
-    }
-
-    pub fn reset(&mut self) {
-        self.pos = 0;
-    }
-
 }
 
-pub struct GenericInstruction {
-    name: String,
-    args: Vec<String>,
-}
 
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    #[test]
-    fn test_lexer_instruction_lines() {
-        // define multi line string
-        let src = r#"li $t0, 123
-            li $t1, 456"#;
-
-
-        let mut lexer = Lexer::new(src);
-        let line = lexer.next().unwrap();
-        assert_eq!(line.line, "li $t0, 123");
-        let line = lexer.next().unwrap();
-        assert_eq!(line.line, "li $t1, 456");
-        assert_eq!(lexer.next(), None);
-    }
-
-    #[test]
-    fn test_lexer_instruction_lines_with_empty_lines() {
-        // define multi line string
-        let src = r#"li $t0, 123
-            li $t1, 456"#;
-
-        let mut lexer = Lexer::new(src);
-        let mut line = lexer.next().unwrap();
-        line.parse();
-
-
-    }
-}
 
