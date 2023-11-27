@@ -1,8 +1,6 @@
 use crate::registers::{Register, register_to_addr};
 
 pub enum Bytecode {
-    // stores hardcoded immediate values
-    LOCAL(u32),
     // loads register values
     LOAD(u32),
     // stores register values
@@ -18,14 +16,15 @@ pub enum Bytecode {
     JUMP(u32),
 
     PUSH(u32),
-    POP,
+    POP(u32),
 
     HALT,
     DEBUG,
 }
 
 pub enum AsmInstruction {
-    LI(String, u32)
+    LI(String, u32),
+    ADD(u32, u32, u32),
 }
 
 impl AsmInstruction {
@@ -38,6 +37,15 @@ impl AsmInstruction {
                     Bytecode::STORE(register_to_addr(reg.clone()).unwrap()),
                 ]
             }
+            AsmInstruction::ADD(rd, rs, rt) => {
+                vec![
+                    Bytecode::PUSH(*rt),
+                    Bytecode::PUSH(*rs),
+                    Bytecode::ADD,
+                    Bytecode::POP(*rd),
+                ]
+            }
+            _ => { unimplemented!() }
         }
     }
     
