@@ -15,16 +15,21 @@ pub enum Bytecode {
 
     JUMP(u32),
 
-    PUSH(u32),
-    POP(u32),
+    PUSH(Value),
+    POP(Value),
 
     HALT,
     DEBUG,
 }
 
+pub enum Value {
+    Register(Register),
+    Immediate(u32),
+}
+
 pub enum AsmInstruction {
     LI(String, u32),
-    ADD(u32, u32, u32),
+    ADD(u32, Value, Value),
 }
 
 impl AsmInstruction {
@@ -32,10 +37,7 @@ impl AsmInstruction {
     pub fn to_bytecode(&self) -> Vec<Bytecode> {
         match self {
             AsmInstruction::LI(reg, val) => {
-                vec![
-                    Bytecode::PUSH(*val),
-                    Bytecode::STORE(register_to_addr(reg.clone()).unwrap()),
-                ]
+                return Self::convert_li(*self);
             }
             AsmInstruction::ADD(rd, rs, rt) => {
                 vec![
@@ -47,6 +49,10 @@ impl AsmInstruction {
             }
             _ => { unimplemented!() }
         }
+    }
+
+    fn convert_li() -> Vec<Bytecode> {
+
     }
     
 }

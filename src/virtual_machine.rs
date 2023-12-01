@@ -39,17 +39,28 @@ impl VirtualMachine {
     }
 
     pub fn reg_set(&mut self,reg: u32, value: u32) {
-        if reg > 31 {
+        if reg > 32 {
             panic!("Invalid register");
         }
         self.registers[reg as usize] = value;
     }
 
     pub fn reg_get(&self, reg: u32) -> u32 {
-        if reg > 31 {
+        if reg > 32 {
             panic!("Invalid register");
         }
         self.registers[reg as usize]
+    }
+
+    pub fn execute(&mut self) {
+        let current_instruction = self.program[self.pc as usize];
+        match current_instruction {
+            Bytecode::PUSH(reg) => {
+                let reg_value = self.reg_get(reg);
+                self.stack.push(reg_value);
+            },
+            _ => { unimplemented!("Instruction not implemented") }
+        }
     }
 
 }
