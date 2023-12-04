@@ -29,6 +29,7 @@ pub struct VirtualMachine {
     pc: usize,
     program: Vec<Bytecode>,
     stack: Stack,
+    console: Vec<String>
 }
 
 impl VirtualMachine {
@@ -36,14 +37,15 @@ impl VirtualMachine {
     pub fn new() -> VirtualMachine {
         VirtualMachine {
             registers: [0; 32],
-            memory: vec![0; 1024],
+            memory: Vec::new(),
             pc: 0,
             program: Vec::new(),
             stack: Stack::new(),
+            console: Vec::new(),
         }
     }
 
-    pub fn add_program(&mut self, program: Vec<Bytecode>) {
+    pub fn set_program(&mut self, program: Vec<Bytecode>) {
         self.program = program;
     }
 
@@ -115,7 +117,7 @@ mod tests {
             Bytecode::ADD,
             Bytecode::SETO(Value::Register(register_to_addr("$t3".to_string()).unwrap())),
         ];
-        vm.add_program(program);
+        vm.set_program(program);
 
         // PUSH 1
         vm.execute();
@@ -154,6 +156,7 @@ mod tests {
         assert!(matches!(vm.reg_get(register_to_addr("$t1".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t2".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t3".to_string()).unwrap()), 2));
+        assert!(vm.stack.peek() == None);
 
     }
 }

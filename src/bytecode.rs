@@ -17,9 +17,14 @@ pub enum Bytecode {
     // sets and pops value to register
     SETO(Value),
 
+    // System Specific
+    // =======================
+    SYSCALL,
+
     // Register Specific
     // =======================
     SET(Value),
+    GET(Value),
 
     // Arithmetic Specifc
     // =======================
