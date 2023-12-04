@@ -23,25 +23,12 @@ impl Stack {
     }
 }
 
-/// Heap to emulate the sytem heap, returns
-/// pointer to the heap and can store u8 vecs
-struct Heap {
-}
-
-impl Heap {
-    pub fn new() -> Heap {
-        Heap {}
-    }
-}
-
-
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
     pc: usize,
     program: Vec<Bytecode>,
     stack: Stack,
-    heap: Heap,
 }
 
 impl VirtualMachine {
@@ -53,7 +40,6 @@ impl VirtualMachine {
             pc: 0,
             program: Vec::new(),
             stack: Stack::new(),
-            heap: Heap::new(),
         }
     }
 
