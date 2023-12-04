@@ -1,4 +1,4 @@
-use crate::{bytecode::Bytecode, operators};
+use crate::bytecode::Bytecode;
 
 struct Stack {
     data: Vec<u32>,
@@ -18,7 +18,7 @@ impl Stack {
     }
 
     #[cfg(debug_assertions)]
-    pub fn peek(&self) -> Option<&u32> {
+    fn peek(&self) -> Option<&u32> {
         self.data.last()
     }
 }
