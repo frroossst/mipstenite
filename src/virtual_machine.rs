@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo};
 
 struct Stack {
@@ -25,13 +23,68 @@ impl Stack {
     }
 }
 
+pub enum ConsoleLocation {
+    Socket,
+    Terminal,
+}
+
+impl Default for ConsoleLocation {
+    fn default() -> Self {
+        ConsoleLocation::Terminal
+    }
+}
+
+pub struct Console {
+    console: Vec<u8>,
+    location: ConsoleLocation,
+}
+
+impl Console {
+
+    pub fn new() -> Console {
+        Console {
+            console: Vec::new(),
+            location: Default::default(),
+        }
+    }
+
+    pub fn set_location(&mut self, location: ConsoleLocation) {
+        self.location = location;
+    }
+
+    pub fn read_from_console(&mut self) {
+        match self.location {
+            ConsoleLocation::Socket => {
+                unimplemented!()
+            },
+            ConsoleLocation::Terminal => {
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).expect("Failed to read from stdin");
+                self.console = input.as_bytes().to_vec();
+            },
+        }
+    }
+
+    pub fn write_to_console(&self) {
+        match self.location {
+            ConsoleLocation::Socket => {
+                unimplemented!()
+            },
+            ConsoleLocation::Terminal => {
+                println!("{}", String::from_utf8(self.console.clone()).unwrap());
+            },
+        }
+    }
+
+}
+
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
     pc: usize,
     program: Vec<Bytecode>,
     stack: Stack,
-    console: Vec<u8>,
+    console: Console,
     pub runtime_dbg: RuntimeDebugInfo,
 }
 
@@ -44,7 +97,7 @@ impl VirtualMachine {
             pc: 0,
             program: Vec::new(),
             stack: Stack::new(),
-            console: Vec::new(),
+            console: Console::new(),
             runtime_dbg: RuntimeDebugInfo::new(),
         }
     }
@@ -70,6 +123,14 @@ impl VirtualMachine {
             panic!("Invalid register");
         }
         self.registers[reg as usize]
+    }
+
+    pub fn read_from_console(&mut self) {
+        return self.console.read_from_console();
+    }
+
+    pub fn write_to_console(&self) {
+        return self.console.write_to_console();
     }
 
     /// only executes the next instruction

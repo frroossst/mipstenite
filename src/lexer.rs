@@ -54,70 +54,10 @@ impl Lexer {
     pub fn parse(&mut self) {
         let line = self.next();
         match line {
-            Some(line) => {
-                let mut line = line.clone();
-                line = self.consume_whitespace(line);
-                line = self.consume_comment(line);
-                let label = self.parse_label(line.clone());
-                let instruction = self.parse_instruction(line.clone());
-                let register = self.parse_register(line.clone());
-                let immediate = self.parse_immediate(line.clone());
-                match label {
-                    Some(label) => {
-                        self.labels.insert(label);
-                    },
-                    None => (),
-                }
-                match instruction {
-                    Some(instruction) => {
-                        let parsed_instruction = ParsedInstruction {
-                            asm_ins: AsmInstruction::new(instruction),
-                            line_num: self.line_number,
-                            label: "".to_string(),
-                        };
-                        self.compile_dbg.add_instruction(parsed_instruction);
-                    },
-                    None => (),
-                }
-                match register {
-                    Some(register) => {
-                        self.compile_dbg.add_register(register);
-                    },
-                    None => (),
-                }
-                match immediate {
-                    Some(immediate) => {
-                        self.compile_dbg.add_immediate(immediate);
-                    },
-                    None => (),
-                }
+            Some(l) => {
             },
             None => (),
         }
-    }
-
-    pub fn parse_label(&mut self, line: String) -> Option<String> {
-        None
-    }
-
-    pub fn parse_instruction(&mut self, line: String) -> Option<String> {
-        None
-    }
-
-    pub fn parse_register(&mut self, line: String) -> Option<String> {
-        None
-    }
-
-    pub fn parse_immediate(&mut self, line: String) -> Option<String> {
-        None
-    }
-
-    pub fn consume_whitespace(&mut self, line: String) -> Option<String> {
-        None
-    }
-
-    pub fn consume_comment(&mut self, line: String) -> Option<String> {
-        None
     }
 
 }
