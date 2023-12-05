@@ -1,5 +1,6 @@
 use crate::registers::{Register, register_to_addr};
 
+#[derive(Debug, Clone)]
 pub enum Bytecode {
     // VM Specific
     // =======================
@@ -33,6 +34,7 @@ pub enum Bytecode {
 
 }
 
+#[derive(Debug, Clone)]
 pub enum Value {
     Register(u32),
     Immediate(u32),
@@ -58,6 +60,7 @@ impl Value {
 pub enum AsmInstruction {
     LI(String, u32),
     ADD(String, String, String),
+    JUMP(u32),
 }
 
 impl AsmInstruction {
@@ -121,6 +124,12 @@ mod tests {
         assert!(matches!(asm_out[1], Bytecode::GETP(Value::Register(10))));
         assert!(matches!(asm_out[2], Bytecode::ADD));
         assert!(matches!(asm_out[3], Bytecode::SETO(Value::Register(8))));
+    }
+
+    #[test]
+
+    fn test_to_jump() {
+        unimplemented!()
     }
 
 }

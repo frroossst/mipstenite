@@ -1,4 +1,6 @@
-use crate::bytecode::Bytecode;
+use std::collections::HashMap;
+
+use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo};
 
 struct Stack {
     data: Vec<u32>,
@@ -29,7 +31,8 @@ pub struct VirtualMachine {
     pc: usize,
     program: Vec<Bytecode>,
     stack: Stack,
-    console: Vec<String>
+    console: Vec<u8>,
+    pub runtime_dbg: RuntimeDebugInfo,
 }
 
 impl VirtualMachine {
@@ -42,7 +45,13 @@ impl VirtualMachine {
             program: Vec::new(),
             stack: Stack::new(),
             console: Vec::new(),
+            runtime_dbg: RuntimeDebugInfo::new(),
         }
+    }
+
+    pub fn init(&mut self, mem: Vec<u8>, program: Vec<Bytecode>) {
+        self.memory = mem;
+        self.program = program;
     }
 
     pub fn set_program(&mut self, program: Vec<Bytecode>) {
@@ -88,6 +97,7 @@ impl VirtualMachine {
             },
             _ => { unimplemented!("Instruction not implemented") }
         }
+        self.runtime_dbg.push_bytecode(self.program[self.pc].clone());
         self.pc += 1;
     }
 
