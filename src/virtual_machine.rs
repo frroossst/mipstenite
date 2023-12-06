@@ -133,7 +133,7 @@ impl VirtualMachine {
         return self.console.write_to_console();
     }
 
-    /// only executes the next instruction
+    // only executes the next instruction
     pub fn execute(&mut self) {
         let current_instruction = &self.program[self.pc];
         match current_instruction {

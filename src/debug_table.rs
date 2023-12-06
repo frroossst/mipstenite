@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::bytecode::{Bytecode, AsmInstruction};
 
 /// usize maps to three things: 
@@ -11,6 +13,7 @@ pub struct CompileDebugInfo {
     instructions: Vec<String>,
     asm_instructions: Vec<AsmInstruction>,
     byc_instructions: Vec<Bytecode>,
+    label_map: HashMap<String, usize>,
 }
 
 impl CompileDebugInfo {
@@ -20,6 +23,7 @@ impl CompileDebugInfo {
             instructions: Vec::new(),
             asm_instructions: Vec::new(), 
             byc_instructions: Vec::new(),
+            label_map: HashMap::new(),
         }
     }
 
