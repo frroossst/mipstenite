@@ -57,6 +57,7 @@ impl Value {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum AsmInstruction {
     LI(String, u32),
     ADD(String, String, String),

@@ -1,12 +1,13 @@
 use nom::{
     IResult,
-    Parser,
-    error::{ParseError, Error},
-    sequence::{delimited, preceded, terminated, pair},
-    bytes::complete::{is_not, tag, take_while, take_while1}, combinator::value,
-    character::complete::{char, line_ending}, branch::alt, multi::{separated_list1, separated_list0},
+    error::ParseError,
+    sequence::pair,
+    bytes::complete::is_not, character::complete::char,
 };
-use nom_locate::{position, LocatedSpan};
+use nom_locate::LocatedSpan;
+
+use super::bytecode::AsmInstruction;
+use std::collections::BTreeSet;
 
 type Span<'a> = LocatedSpan<&'a str>;
 #[derive(Debug, Clone)]
@@ -59,6 +60,11 @@ fn eol_comment<'a>(i: Span<'a>) -> IResult<Span<'a>, String, ParserVerboseError>
     Ok((i, comment.fragment().to_string()))
 }
 
+/// function to parse a line of assembly instructions
+fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
+    Ok((i, AsmInstruction::LI("$t1".to_string(), 45)))
+}
+
 
 
 
@@ -67,7 +73,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_eol2_comment() {
+    fn test_eol_comment() {
         let input = "# This is a comment\n";
         let result = eol_comment(Span::new(input));
         assert!(result.is_ok());
@@ -82,6 +88,16 @@ mod tests {
         let err = result.unwrap_err();
         let pve: ParserVerboseError = err.into();
         assert!(pve.msg.contains("failed to parse comment"));
+    }
+
+    #[test]
+    fn test_parse_instruction() {
+        let input = "li $t1, 45";
+        let result = parse_instruction(Span::new(input));
+        assert!(result.is_ok());
+        let (i, instruction) = result.unwrap();
+        assert_eq!(i.fragment(), &"");
+        assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
     }
 
     #[test]
