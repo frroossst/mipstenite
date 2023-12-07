@@ -6,7 +6,7 @@ use nom::{
 };
 use nom_locate::LocatedSpan;
 
-use crate::parser_utils::check_argument_counts;
+use crate::parser_utils::{check_argument_counts, ensure_register};
 
 use super::bytecode::AsmInstruction;
 use super::err_util::map_parse_error;
@@ -72,19 +72,9 @@ fn consume_whitespace<'a>(i: Span<'a>) -> IResult<Span<'a>, (), ParserVerboseErr
 /// function to parse a line of assembly instructions
 fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
     let stripped_src = consume_whitespace(i)?.0;
-
-    // parse instruction, parse alphabet until space
-    // let instruction = is_not(" ")(stripped_src)?.1.fragment().to_string();
-
     // parse instruction, parse alphabet until space and return the rest of the source
     let (args, ins) = recognize(tuple((is_not(" "), consume_whitespace)))(stripped_src)?;
-
-    // let parsed_instruction: AsmInstruction = instruction.parse().unwrap();
-    // println!("parsed instruction: {:?}", parsed_instruction);
-
-    println!("ins: {:?}", ins.fragment());
     let instruction = ins.fragment().trim().to_string();
-    println!("rest: {:?}", args.fragment());
 
     // parse arguments until newline, each argument is separated by a comma
     // any amount of whitespace is allowed between arguments
@@ -95,17 +85,24 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
             |s: Span| s.fragment().trim().to_string(),
         ),
     )(args)?;
-    println!("args: {:?}", arguments);
 
     match instruction.as_str() {
         "li" => {
             check_argument_counts(&arguments, 2, i)?;
             let reg = arguments.get(0).unwrap();
+            ensure_register(reg, i)?;
             let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<u32>(), Some("unable to parse immediate value"))?;
             Ok((i, AsmInstruction::LI(reg.to_string(), imm)))
         }
         "add" => {
-            unimplemented!()
+            check_argument_counts(&arguments, 3, i)?;
+            let rd = arguments.get(0).unwrap();
+            ensure_register(rd, i)?;
+            let rs = arguments.get(1).unwrap();
+            ensure_register(rs, i)?;
+            let rt = arguments.get(2).unwrap();
+            ensure_register(rt, i)?;
+            Ok((i, AsmInstruction::ADD(rd.to_string(), rs.to_string(), rt.to_string())))
         }
         // else return error
         _ => Err(nom::Err::Failure(ParserVerboseError {
