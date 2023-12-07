@@ -1,3 +1,5 @@
+use mipstenite::parser::mock_parser;
+
 fn main() {
     let src = r#"
         # ------------------------------------------------------------------
@@ -34,4 +36,8 @@ fn main() {
         msg1:	.asciiz	"y="
         lf:     .asciiz	"\n"
         "#;
+
+        let lxr_src = "li $t1, 45";
+		let result = mock_parser(lxr_src);
+		println!("{:#?}", result);
 }

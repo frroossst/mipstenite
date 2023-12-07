@@ -1,17 +1,19 @@
 use nom::{
     IResult,
     error::ParseError,
-    sequence::pair,
-    bytes::complete::is_not, character::complete::char,
+    sequence::{pair, tuple},
+    bytes::complete::{is_not, take_while}, character::complete::char, combinator::{map, recognize}, multi::separated_list1,
 };
 use nom_locate::LocatedSpan;
 
+use crate::parser_utils::check_argument_counts;
+
 use super::bytecode::AsmInstruction;
-use std::collections::BTreeSet;
+use super::err_util::map_parse_error;
 
 type Span<'a> = LocatedSpan<&'a str>;
 #[derive(Debug, Clone)]
-struct ParserVerboseError {
+pub struct ParserVerboseError {
     pub line: u32,
     pub column: usize,
     pub input: String,
@@ -60,11 +62,65 @@ fn eol_comment<'a>(i: Span<'a>) -> IResult<Span<'a>, String, ParserVerboseError>
     Ok((i, comment.fragment().to_string()))
 }
 
-/// function to parse a line of assembly instructions
-fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
-    Ok((i, AsmInstruction::LI("$t1".to_string(), 45)))
+/// consumes all whitespace characters
+fn consume_whitespace<'a>(i: Span<'a>) -> IResult<Span<'a>, (), ParserVerboseError> {
+    let (i, _) = nom::character::complete::multispace0(i)?;
+    Ok((i, ()))
 }
 
+
+/// function to parse a line of assembly instructions
+fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
+    let stripped_src = consume_whitespace(i)?.0;
+
+    // parse instruction, parse alphabet until space
+    // let instruction = is_not(" ")(stripped_src)?.1.fragment().to_string();
+
+    // parse instruction, parse alphabet until space and return the rest of the source
+    let (args, ins) = recognize(tuple((is_not(" "), consume_whitespace)))(stripped_src)?;
+
+    // let parsed_instruction: AsmInstruction = instruction.parse().unwrap();
+    // println!("parsed instruction: {:?}", parsed_instruction);
+
+    println!("ins: {:?}", ins.fragment());
+    let instruction = ins.fragment().trim().to_string();
+    println!("rest: {:?}", args.fragment());
+
+    // parse arguments until newline, each argument is separated by a comma
+    // any amount of whitespace is allowed between arguments
+    let (_, arguments) = separated_list1(
+        char(','),
+        map(
+            recognize(tuple((consume_whitespace, is_not(",\r\n"), consume_whitespace))),
+            |s: Span| s.fragment().trim().to_string(),
+        ),
+    )(args)?;
+    println!("args: {:?}", arguments);
+
+    match instruction.as_str() {
+        "li" => {
+            check_argument_counts(&arguments, 2, i)?;
+            let reg = arguments.get(0).unwrap();
+            let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<u32>(), Some("unable to parse immediate value"))?;
+            Ok((i, AsmInstruction::LI(reg.to_string(), imm)))
+        }
+        "add" => {
+            unimplemented!()
+        }
+        // else return error
+        _ => Err(nom::Err::Failure(ParserVerboseError {
+            line: i.location_line(),
+            column: i.get_column(),
+            input: i.fragment().to_string(),
+            msg: format!("invalid instruction: {}", instruction),
+        })),
+    }
+
+}
+
+pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, AsmInstruction), nom::Err<ParserVerboseError>> {
+    parse_instruction(Span::new(src_in))
+}
 
 
 

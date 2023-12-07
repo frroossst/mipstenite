@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::registers::{Register, register_to_addr};
 
 #[derive(Debug, Clone)]
@@ -62,6 +64,21 @@ pub enum AsmInstruction {
     LI(String, u32),
     ADD(String, String, String),
     JUMP(u32),
+}
+
+impl std::str::FromStr for AsmInstruction {
+    type Err = String;
+
+    // only instruction is provided the operands are defaulted
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "li" => Ok(AsmInstruction::LI(Default::default(), Default::default())),
+            "add" => Ok(AsmInstruction::ADD(Default::default(), Default::default(), Default::default())),
+            "j" => Ok(AsmInstruction::JUMP(Default::default())),
+            _ => Err(format!("invalid instruction: {}", s))
+        }
+    }
+
 }
 
 impl AsmInstruction {
