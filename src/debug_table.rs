@@ -9,6 +9,7 @@ use crate::bytecode::{Bytecode, AsmInstruction};
 /// So, the error message can look like:
 /// [ERROR] 13: li $t9, 123 in foo
 ///     VM failed to set register
+#[derive(Debug)]
 pub struct CompileDebugInfo {
     instructions: Vec<String>,
     asm_instructions: Vec<AsmInstruction>,
@@ -33,6 +34,7 @@ impl CompileDebugInfo {
 /// this stores the stack trace
 /// current instruction etc. 
 /// for debugging purposes
+#[derive(Debug)]
 pub struct RuntimeDebugInfo {
     ins_stack_trace: Vec<String>,
     byc_stack_trace: Vec<Bytecode>,

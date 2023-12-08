@@ -1,4 +1,4 @@
-use mipstenite::parser::mock_parser;
+use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, panic_hook::set_panic_hook};
 
 fn main() {
     let src = r#"
@@ -41,8 +41,30 @@ fn main() {
 		li $t2, 5
 		add $t3, $t1, $t2"#;
 		let result = mock_parser(lxr_src);
+		let asm_instructions: Vec<AsmInstruction>;
+		let mut byc_translations: Vec<Vec<Bytecode>> = Vec::new();
 		if result.is_ok() {
-			println!("{:?}", result.unwrap().1);
+			asm_instructions = result.unwrap().1;
+			for i in asm_instructions {
+				byc_translations.push(i.to_bytecode());
+			}
 		}
+
+		let byc_instructions = byc_translations.into_iter().flatten().collect::<Vec<Bytecode>>();
+
+		let mut vm = VirtualMachine::new();
+	
+		vm.init(Default::default(), byc_instructions);
+
+		println!("{:#?}", vm);
+
+
+		// DEBUG: remove later
+		for i in 0..9 {
+			println!("Step {}", i);
+			vm.execute();
+		}
+
+		println!("{:#?}", vm);
 
 }

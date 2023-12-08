@@ -1,5 +1,6 @@
 use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo};
 
+#[derive(Debug)]
 struct Stack {
     data: Vec<u32>,
 }
@@ -23,6 +24,7 @@ impl Stack {
     }
 }
 
+#[derive(Debug)]
 pub enum ConsoleLocation {
     Socket,
     Terminal,
@@ -34,6 +36,7 @@ impl Default for ConsoleLocation {
     }
 }
 
+#[derive(Debug)]
 pub struct Console {
     console: Vec<u8>,
     location: ConsoleLocation,
@@ -78,6 +81,7 @@ impl Console {
 
 }
 
+#[derive(Debug)]
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
@@ -156,7 +160,7 @@ impl VirtualMachine {
                 let op2 = self.stack.pop().expect("Stack underflow");
                 self.stack.push(op1 + op2);
             },
-            _ => { unimplemented!("Instruction not implemented") }
+            _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
         self.runtime_dbg.push_bytecode(self.program[self.pc].clone());
         self.pc += 1;

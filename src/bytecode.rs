@@ -102,7 +102,7 @@ impl AsmInstruction {
     fn convert_li(reg: u32, imm: u32) -> Vec<Bytecode> {
         vec![
             Bytecode::PUSH(Value::Immediate(imm)),
-            Bytecode::SET(Value::Register(reg)),
+            Bytecode::SETO(Value::Register(reg)),
         ]
     }
 
