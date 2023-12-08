@@ -1,8 +1,10 @@
+use std::ffi::FromBytesWithNulError;
+
 use nom::{
     IResult,
     error::ParseError,
     sequence::{pair, tuple},
-    bytes::complete::{is_not, take_while}, character::complete::char, combinator::{map, recognize}, multi::separated_list1,
+    bytes::complete::{is_not, take_while}, character::complete::char, combinator::{map, recognize, all_consuming}, multi::{separated_list1, separated_list0}, branch::alt, Err,
 };
 use nom_locate::LocatedSpan;
 
@@ -68,7 +70,6 @@ fn consume_whitespace<'a>(i: Span<'a>) -> IResult<Span<'a>, (), ParserVerboseErr
     Ok((i, ()))
 }
 
-
 /// function to parse a line of assembly instructions
 fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
     let stripped_src = consume_whitespace(i)?.0;
@@ -78,7 +79,7 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
 
     // parse arguments until newline, each argument is separated by a comma
     // any amount of whitespace is allowed between arguments
-    let (_, arguments) = separated_list1(
+    let (i, arguments) = separated_list1(
         char(','),
         map(
             recognize(tuple((consume_whitespace, is_not(",\r\n"), consume_whitespace))),
@@ -86,13 +87,15 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
         ),
     )(args)?;
 
+    let remaining = consume_whitespace(i)?.0;
+
     match instruction.as_str() {
         "li" => {
             check_argument_counts(&arguments, 2, i)?;
             let reg = arguments.get(0).unwrap();
             ensure_register(reg, i)?;
             let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<u32>(), Some("unable to parse immediate value"))?;
-            Ok((i, AsmInstruction::LI(reg.to_string(), imm)))
+            Ok((remaining, AsmInstruction::LI(reg.to_string(), imm)))
         }
         "add" => {
             check_argument_counts(&arguments, 3, i)?;
@@ -102,21 +105,47 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
             ensure_register(rs, i)?;
             let rt = arguments.get(2).unwrap();
             ensure_register(rt, i)?;
-            Ok((i, AsmInstruction::ADD(rd.to_string(), rs.to_string(), rt.to_string())))
+            Ok((remaining, AsmInstruction::ADD(rd.to_string(), rs.to_string(), rt.to_string())))
+            // Ok((i, AsmInstruction::ADD(rd.to_string(), rs.to_string(), rt.to_string())))
         }
         // else return error
         _ => Err(nom::Err::Failure(ParserVerboseError {
             line: i.location_line(),
             column: i.get_column(),
             input: i.fragment().to_string(),
-            msg: format!("invalid instruction: {}", instruction),
+            msg: format!("invalid instruction: {instruction}"),
         })),
     }
 
 }
 
-pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, AsmInstruction), nom::Err<ParserVerboseError>> {
-    parse_instruction(Span::new(src_in))
+pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, Vec<AsmInstruction>), nom::Err<ParserVerboseError>> {
+    // parse_instruction(Span::new(src_in))
+
+    let input_source = Span::new(src_in);
+    let mut remaining_input = input_source;
+
+    let mut bytecode_source = Vec::new();
+
+    loop {
+        match parse_instruction(remaining_input) {
+            Ok((remaining, parsed_result)) => {
+                bytecode_source.push(parsed_result);
+
+                if remaining.fragment().is_empty() {
+                    return Ok((remaining, bytecode_source));
+                }
+
+                // Update the remaining input for the next iteration
+                remaining_input = remaining;
+            }
+            Err(err) => {
+                eprintln!("Parsing error: {:?}", err);
+                return Err(err);
+            }
+        }
+    }
+
 }
 
 
@@ -149,8 +178,25 @@ mod tests {
         let result = parse_instruction(Span::new(input));
         assert!(result.is_ok());
         let (i, instruction) = result.unwrap();
-        assert_eq!(i.fragment(), &"");
+        assert_eq!(i.fragment(), &"li $t1, 45");
         assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
+    }
+
+    #[test]
+    fn test_parse_instruction_multiline() {
+        let input = "li $t1, 45\nadd $t1, $t1, $t1";
+        let result = parse_instruction(Span::new(input));
+        assert!(result.is_ok());
+        let (i, instruction) = result.unwrap();
+        assert_eq!(i.fragment(), &"add $t1, $t1, $t1");
+        assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
+
+        let result = parse_instruction(i);
+        assert!(result.is_ok());
+        let (i, instruction) = result.unwrap();
+        assert_eq!(i.fragment(), &"");
+        assert_eq!(instruction, AsmInstruction::ADD("$t1".to_string(), "$t1".to_string(), "$t1".to_string()));
+
     }
 
     #[test]

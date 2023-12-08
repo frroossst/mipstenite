@@ -37,7 +37,12 @@ fn main() {
         lf:     .asciiz	"\n"
         "#;
 
-        let lxr_src = "li $t1, 45";
+        let lxr_src = r#"li $t1, 45
+		li $t2, 5
+		add $t3, $t1, $t2"#;
 		let result = mock_parser(lxr_src);
-		println!("{:#?}", result);
+		if result.is_ok() {
+			println!("{:?}", result.unwrap().1);
+		}
+
 }

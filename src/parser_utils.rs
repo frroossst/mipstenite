@@ -7,10 +7,11 @@ use crate::registers::{Register, register_to_addr};
 /// and then return and propogate the error upwards to be handled by the caller
 pub fn check_argument_counts(args: &Vec<String>, expected: usize, i: LocatedSpan<&str>) -> Result<(), nom::Err<ParserVerboseError>> {
 
+    let actual = args.len();
     map_parse_error(
         i,
         || {
-            if args.len() != expected {
+            if actual != expected {
                 return Err(nom::Err::Failure(ParserVerboseError {
                     line: i.location_line(),
                     column: i.get_column(),
@@ -20,7 +21,7 @@ pub fn check_argument_counts(args: &Vec<String>, expected: usize, i: LocatedSpan
             }
             Ok(())
         },
-        Some(&format!("expected {} arguments, got {}", expected, args.len()))
+        Some(&format!("expected {expected} arguments, got {actual}"))
     )
 }
 
@@ -38,11 +39,11 @@ pub fn ensure_register(arg: &str, i: LocatedSpan<&str>) -> Result<(), nom::Err<P
                     line: i.location_line(),
                     column: i.get_column(),
                     input: i.fragment().to_string(),
-                    msg: format!("expected register, got {}", arg),
+                    msg: format!("expected register, got {arg}"),
                 }));
             }
             Ok(())
         },
-        Some(&format!("{} is not a valid register", arg))
+        Some(&format!("{arg} is not a valid register"))
     )
 }

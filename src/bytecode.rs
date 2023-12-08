@@ -75,7 +75,7 @@ impl std::str::FromStr for AsmInstruction {
             "li" => Ok(AsmInstruction::LI(Default::default(), Default::default())),
             "add" => Ok(AsmInstruction::ADD(Default::default(), Default::default(), Default::default())),
             "j" => Ok(AsmInstruction::JUMP(Default::default())),
-            _ => Err(format!("invalid instruction: {}", s))
+            _ => Err(format!("invalid instruction: {s}"))
         }
     }
 
