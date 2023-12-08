@@ -1,4 +1,4 @@
-use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo, registers::PrettyFmtRegister};
+use crate::{bytecode::Bytecode, debug_table::{RuntimeDebugInfo, CompileDebugInfo}, registers::PrettyFmtRegister};
 
 #[derive(Debug)]
 struct Stack {
@@ -18,6 +18,7 @@ impl Stack {
         self.data.pop()
     }
 
+    #[allow(dead_code)]
     #[cfg(debug_assertions)]
     fn peek(&self) -> Option<&u32> {
         self.data.last()
@@ -115,6 +116,11 @@ impl VirtualMachine {
         self.program = program;
     }
 
+    pub fn setup_debug(&mut self, debug: CompileDebugInfo) {
+        self.runtime_dbg = RuntimeDebugInfo::new();
+        self.runtime_dbg.attach_compile_debug_info(debug);
+    }
+
     pub fn reg_set(&mut self,reg: u32, value: u32) {
         if reg > 32 {
             panic!("Invalid register");
@@ -164,7 +170,7 @@ impl VirtualMachine {
             },
             _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
-        self.runtime_dbg.push_bytecode(self.program[self.pc].clone());
+        self.runtime_dbg.push_stack_trace(self.pc);
         self.pc += 1;
     }
 
@@ -180,7 +186,7 @@ impl std::fmt::Debug for VirtualMachine {
             .field("program", &self.program)
             .field("stack", &self.stack)
             .field("console", &self.console)
-            .field("runtime_dbg", &self.runtime_dbg)
+            .field("runtime_dbg", &self.runtime_dbg.print_debug_info())
             .finish()
     }
 }
