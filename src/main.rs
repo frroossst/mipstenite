@@ -1,4 +1,4 @@
-use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, panic_hook::set_panic_hook};
+use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}};
 
 fn main() {
     let src = r#"
@@ -60,7 +60,7 @@ fn main() {
 
 
 		// DEBUG: remove later
-		for i in 0..9 {
+		for i in 0..8 {
 			println!("Step {}", i);
 			vm.execute();
 		}

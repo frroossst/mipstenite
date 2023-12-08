@@ -1,4 +1,4 @@
-use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo};
+use crate::{bytecode::Bytecode, debug_table::RuntimeDebugInfo, registers::PrettyFmtRegister};
 
 #[derive(Debug)]
 struct Stack {
@@ -81,7 +81,7 @@ impl Console {
 
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
@@ -118,6 +118,8 @@ impl VirtualMachine {
     pub fn reg_set(&mut self,reg: u32, value: u32) {
         if reg > 32 {
             panic!("Invalid register");
+        } else if reg == 0 {
+            return;
         }
         self.registers[reg as usize] = value;
     }
@@ -166,6 +168,21 @@ impl VirtualMachine {
         self.pc += 1;
     }
 
+}
+
+impl std::fmt::Debug for VirtualMachine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Manually implement the Debug trait for VirtualMachine
+        f.debug_struct("VirtualMachine")
+            .field("registers", &PrettyFmtRegister(&self.registers))
+            .field("memory", &self.memory)
+            .field("pc", &self.pc)
+            .field("program", &self.program)
+            .field("stack", &self.stack)
+            .field("console", &self.console)
+            .field("runtime_dbg", &self.runtime_dbg)
+            .finish()
+    }
 }
 
 #[cfg(test)]

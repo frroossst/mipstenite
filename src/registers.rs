@@ -93,3 +93,24 @@ pub fn addr_to_register(addr: u32) -> Option<Register> {
     }
 }
 
+pub fn pretty_print_registers() {
+
+}
+
+pub struct PrettyFmtRegister<'a>(pub &'a [u32; 32]);
+
+impl<'a> std::fmt::Debug for PrettyFmtRegister<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // The registers should be formatted as `name: value`
+        f.debug_list()
+        .entries(self.0.iter().enumerate().map(|(index, &value)| {
+            if let Some(register_info) = addr_to_register(index as u32) {
+                format!("{}: {}", register_info.name, value)
+            } else {
+                format!("UnknownRegister: {}", value)
+            }
+        }))
+        .finish()
+    }
+}
+
