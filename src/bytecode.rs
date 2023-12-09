@@ -1,13 +1,17 @@
-use std::str::FromStr;
+use serde::{Serialize, Deserialize};
 
 use crate::registers::register_to_addr;
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub enum Bytecode {
     // VM Specific
     // =======================
     ALLOC,
     DEBUG,
+    // terminoator indicated no more insrucitons to execute
+    TERMINATOR,
+    // exit is a deliberate exit from the program
     EXIT,
     HALT,
     STDIN,
@@ -33,10 +37,10 @@ pub enum Bytecode {
     // =======================
     ADD,
 
-
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub enum Value {
     Register(u32),
     Immediate(i16),
@@ -61,6 +65,7 @@ impl Value {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub enum AsmInstruction {
     LI(String, i16),
     ADD(String, String, String),

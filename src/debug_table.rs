@@ -1,10 +1,13 @@
 use std::collections::{HashMap, BTreeMap};
 use std::ops::Range;
 
+use serde::{Serialize, Deserialize};
+
 use crate::bytecode::{Bytecode, AsmInstruction};
 
 
 #[derive(Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize)]
 struct LineRange {
     range: Range<usize>,
 }
@@ -29,8 +32,9 @@ impl PartialOrd for LineRange {
 /// [ERROR] 13: li $t9, 123 in foo
 ///     VM failed to set register
 #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct CompileDebugInfo {
-    debug_map: BTreeMap<LineRange, (AsmInstruction, Vec<Bytecode>)>,
+     debug_map: BTreeMap<LineRange, (AsmInstruction, Vec<Bytecode>)>,
     label_map: HashMap<String, usize>,
 }
 
@@ -80,8 +84,9 @@ impl CompileDebugInfo {
 /// current instruction etc. 
 /// for debugging purposes
 #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct RuntimeDebugInfo {
-    compile_debug_info: CompileDebugInfo,
+    pub compile_debug_info: CompileDebugInfo,
     max_trace: usize,
     stack_trace: Vec<usize>,
 }

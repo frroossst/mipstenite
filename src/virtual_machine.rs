@@ -1,6 +1,9 @@
+use nom::Err;
+use serde::{Serialize, Deserialize};
 use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo}};
 
 #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 struct Stack {
     data: Vec<u32>,
 }
@@ -26,6 +29,7 @@ impl Stack {
 }
 
 #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub enum ConsoleLocation {
     Socket,
     Terminal,
@@ -38,6 +42,7 @@ impl Default for ConsoleLocation {
 }
 
 #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Console {
     console: Vec<u8>,
     location: ConsoleLocation,
@@ -83,6 +88,7 @@ impl Console {
 }
 
 // #[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
@@ -146,7 +152,11 @@ impl VirtualMachine {
     }
 
     // only executes the next instruction
-    pub fn execute(&mut self) {
+    pub fn execute(&mut self) -> Result<(), ()> {
+        if self.pc >= self.program.len() {
+            panic!("Program counter out of bounds");
+        }
+
         let current_instruction = &self.program[self.pc];
         match current_instruction {
             Bytecode::PUSH(val) => {
@@ -168,10 +178,15 @@ impl VirtualMachine {
                 let op2 = self.stack.pop().expect("Stack underflow");
                 self.stack.push(op1 + op2);
             },
+            Bytecode::TERMINATOR => {
+                eprintln!("Reached end of program without exit instruction");
+                return Err(());
+            },
             _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
         self.runtime_dbg.push_stack_trace(self.pc);
         self.pc += 1;
+        return Ok(());
     }
 
 }
@@ -214,6 +229,8 @@ mod tests {
             Bytecode::GETP(Value::Register(register_to_addr("$t2".to_string()).unwrap())),
             Bytecode::ADD,
             Bytecode::SETO(Value::Register(register_to_addr("$t3".to_string()).unwrap())),
+
+            Bytecode::TERMINATOR,
         ];
         vm.set_program(program);
 
