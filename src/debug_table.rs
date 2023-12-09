@@ -71,7 +71,6 @@ impl CompileDebugInfo {
         } else {
             return None;
         }
-
     }
 
 }
@@ -83,6 +82,7 @@ impl CompileDebugInfo {
 #[derive(Debug)]
 pub struct RuntimeDebugInfo {
     compile_debug_info: CompileDebugInfo,
+    max_trace: usize,
     stack_trace: Vec<usize>,
 }
 
@@ -91,6 +91,7 @@ impl RuntimeDebugInfo {
     pub fn new() -> RuntimeDebugInfo {
         RuntimeDebugInfo {
             compile_debug_info: CompileDebugInfo::new(Vec::new()),
+            max_trace: 10,
             stack_trace: Vec::new(),
         }
     }
@@ -100,16 +101,34 @@ impl RuntimeDebugInfo {
     }
 
     pub fn push_stack_trace(&mut self, line_number: usize) {
+        if self.stack_trace.len() >= self.max_trace {
+            self.stack_trace.remove(0);
+        }
         self.stack_trace.push(line_number);
-    }
-
-    pub fn get_instruction_by_bytecode_line_number(&self, line_number: usize) -> Option<(AsmInstruction, Vec<Bytecode>)> {
-        self.compile_debug_info.get(line_number)
     }
 
     pub fn print_debug_info(&self) {
         let mut debug_stack_trace: Vec<(AsmInstruction, Vec<Bytecode>)> = Vec::new();
-        unimplemented!()
+    
+        for i in self.stack_trace.clone() {
+            let debug_info = self.compile_debug_info.get(i).unwrap();
+            debug_stack_trace.push(debug_info);
+        }
+
+        debug_stack_trace.reverse();
+
+        println!("StackTrace");
+        // loop through debug_info only print AsmInstruction that is not similar to the previous one
+        let mut prev_asm_instruction: Option<AsmInstruction> = None;
+        for (asm_instruction, bytecode) in debug_stack_trace {
+            if prev_asm_instruction.is_none() || prev_asm_instruction.unwrap() != asm_instruction {
+                println!("{:?}", asm_instruction);
+                for i in bytecode {
+                    println!("\t{:?}", i);
+                }
+            }
+            prev_asm_instruction = Some(asm_instruction);
+        }
     }
 }
 
@@ -130,8 +149,6 @@ mod tests {
 
         let debug_info = CompileDebugInfo::new(asm_instructions.clone());
 
-        dbg!(asm_instructions[1].to_bytecode().len());
-
         assert_eq!(debug_info.get(0), Some((asm_instructions[0].clone(), asm_instructions[0].to_bytecode())));
         assert_eq!(debug_info.get(1), Some((asm_instructions[0].clone(), asm_instructions[0].to_bytecode())));
 
@@ -144,7 +161,5 @@ mod tests {
         assert_eq!(debug_info.get(7), Some((asm_instructions[2].clone(), asm_instructions[2].to_bytecode())));
 
         assert_eq!(debug_info.get(8), None);
-
-
     }
 }
