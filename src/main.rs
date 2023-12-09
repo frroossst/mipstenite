@@ -93,4 +93,6 @@ fn main() {
 
 		vm2.runtime_dbg.print_debug_info();
 
+		println!("{:#?}", vm2);
+
 }

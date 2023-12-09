@@ -181,6 +181,11 @@ impl VirtualMachine {
                 eprintln!("Reached end of program without exit instruction");
                 return Err(());
             },
+            Bytecode::JUMP(where_to) => {
+                self.runtime_dbg.push_stack_trace(self.pc);
+                self.pc = where_to.to_owned() as usize;
+                return Ok(());
+            },
             _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
         self.runtime_dbg.push_stack_trace(self.pc);

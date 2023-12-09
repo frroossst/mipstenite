@@ -17,6 +17,8 @@ pub enum Bytecode {
     STDIN,
     STDOUT,
     STRACE,
+    // dumps state of VM for debugging
+    DUMP,
     PUSH(Value),
     POP,
     // gets and pushes value to stack
@@ -37,6 +39,34 @@ pub enum Bytecode {
     // =======================
     ADD,
 
+    // Branch Specific
+    // =======================
+    JUMP(u32),
+
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize)]
+pub enum WhereTo {
+    Label(String),
+    Line(u32),
+}
+
+impl WhereTo {
+
+    pub fn lift_label(&self) -> String {
+        return match self {
+            WhereTo::Label(label) => { label.clone() }
+            _ => panic!("cannot lift label")
+        }
+    }
+
+    pub fn lift_line(&self) -> u32 {
+        return match self {
+            WhereTo::Line(line) => { *line }
+            _ => panic!("cannot lift line")
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -69,7 +99,7 @@ impl Value {
 pub enum AsmInstruction {
     LI(String, i16),
     ADD(String, String, String),
-    JUMP(u32),
+    JUMP(WhereTo),
 }
 
 impl std::str::FromStr for AsmInstruction {
@@ -80,7 +110,7 @@ impl std::str::FromStr for AsmInstruction {
         match s {
             "li" => Ok(AsmInstruction::LI(Default::default(), Default::default())),
             "add" => Ok(AsmInstruction::ADD(Default::default(), Default::default(), Default::default())),
-            "j" => Ok(AsmInstruction::JUMP(Default::default())),
+            // "j" => Ok(AsmInstruction::JUMP(Default::default())),
             _ => Err(format!("invalid instruction: {s}"))
         }
     }
@@ -101,6 +131,16 @@ impl AsmInstruction {
                 let op2_name = register_to_addr(op2.clone()).expect("invalid register name: {op2}");
                 Self::convert_add(reg_name, op1_name, op2_name)
             },
+            AsmInstruction::JUMP(where_to) => {
+                match where_to {
+                    WhereTo::Label(label) => {
+                        unimplemented!()
+                    },
+                    WhereTo::Line(line) => { 
+                        Self::convert_jump(line.to_owned())
+                    },
+                }
+            },
             _ => { unimplemented!() }
         }
     }
@@ -120,6 +160,13 @@ impl AsmInstruction {
             Bytecode::SETO(Value::Register(reg)),
         ]
     }
+
+    fn convert_jump(where_to: u32) -> Vec<Bytecode> {
+        vec![
+            Bytecode::JUMP(where_to),
+        ]
+    }
+
     
 }
 
@@ -151,10 +198,17 @@ mod tests {
     }
 
     #[test]
-
     fn test_to_jump() {
-        unimplemented!()
-    }
+        let asm_in = AsmInstruction::JUMP(WhereTo::Line(0));
+        let asm_out = asm_in.to_bytecode();
 
+        assert!(asm_out.len() == 1);
+        assert!(matches!(asm_out[0], Bytecode::JUMP(0)));
+
+        let asm_in = AsmInstruction::JUMP(WhereTo::Line(123));
+        let asm_out = asm_in.to_bytecode();
+        assert!(asm_out.len() == 1);
+        assert!(matches!(asm_out[0], Bytecode::JUMP(123)));
+    }
 }
 
