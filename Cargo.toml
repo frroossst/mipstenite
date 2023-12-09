@@ -10,3 +10,8 @@ bincode = "1.3.3"
 nom = "7.1.3"
 nom_locate = "4.2.0"
 serde = { version = "1.0.193", features = ["derive"] }
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"

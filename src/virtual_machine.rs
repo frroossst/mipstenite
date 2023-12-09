@@ -1,4 +1,3 @@
-use nom::Err;
 use serde::{Serialize, Deserialize};
 use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo}};
 
@@ -235,39 +234,39 @@ mod tests {
         vm.set_program(program);
 
         // PUSH 1
-        vm.execute();
+        vm.execute().unwrap();
         assert!(vm.stack.peek() == Some(&1));
 
         // SET $t1
-        vm.execute();
+        vm.execute().unwrap();
         assert!(matches!(vm.reg_get(register_to_addr("$t1".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t2".to_string()).unwrap()), 0));
         assert!(matches!(vm.reg_get(register_to_addr("$t3".to_string()).unwrap()), 0));
 
         // PUSH 1
-        vm.execute();
+        vm.execute().unwrap();
         assert!(vm.stack.peek() == Some(&1));
 
         // SET $t2
-        vm.execute();
+        vm.execute().unwrap();
         assert!(matches!(vm.reg_get(register_to_addr("$t1".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t2".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t3".to_string()).unwrap()), 0));
 
         // GETP $t1
-        vm.execute();
+        vm.execute().unwrap();
         assert!(vm.stack.peek() == Some(&1));
 
         // GETP $t2
-        vm.execute();
+        vm.execute().unwrap();
         assert!(vm.stack.peek() == Some(&1));
 
         // ADD
-        vm.execute();
+        vm.execute().unwrap();
         assert!(vm.stack.peek() == Some(&2));
 
         // SET $t3
-        vm.execute();
+        vm.execute().unwrap();
         assert!(matches!(vm.reg_get(register_to_addr("$t1".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t2".to_string()).unwrap()), 1));
         assert!(matches!(vm.reg_get(register_to_addr("$t3".to_string()).unwrap()), 2));

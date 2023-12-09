@@ -91,6 +91,6 @@ fn main() {
 			}
 		}
 
-		println!("{:#?}", vm2.runtime_dbg.print_debug_info());
+		vm2.runtime_dbg.print_debug_info();
 
 }
