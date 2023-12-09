@@ -59,22 +59,8 @@ impl CompileDebugInfo {
     }
 
     pub fn get(&self, bytecode_number: usize) -> Option<(AsmInstruction, Vec<Bytecode>)> {
-        let keys = self.debug_map.keys();
-        // check membership of bytecode_number in range of which the key is the range
-
-        // lookup bytecode_number in the range of keys and retuirn the value
-        let lookup_key = keys.clone().find_map(|key| {
-            if key.range.contains(&bytecode_number) {
-                return Some(key);
-            }
-            None
-        });
-
-        if lookup_key.is_some() {
-            return self.debug_map.get(lookup_key.unwrap()).cloned();
-        } else {
-            return None;
-        }
+        let lookup_key = self.debug_map.keys().find(|key| key.range.contains(&bytecode_number));
+        lookup_key.and_then(|key| self.debug_map.get(key).cloned())
     }
 
 }
