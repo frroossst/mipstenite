@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::registers::{Register, register_to_addr};
+use crate::registers::register_to_addr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Bytecode {
@@ -39,7 +39,7 @@ pub enum Bytecode {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Register(u32),
-    Immediate(u32),
+    Immediate(i16),
 }
 
 impl Value {
@@ -53,7 +53,8 @@ impl Value {
 
     pub fn lift_immediate(&self) -> u32 {
         return match self {
-            Value::Immediate(imm) => { *imm }
+            // i16 to u32
+            Value::Immediate(imm) => { *imm as u32 }
             _ => panic!("cannot life immediate value")
         }
     }
@@ -61,7 +62,7 @@ impl Value {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AsmInstruction {
-    LI(String, u32),
+    LI(String, i16),
     ADD(String, String, String),
     JUMP(u32),
 }
@@ -99,7 +100,7 @@ impl AsmInstruction {
         }
     }
 
-    fn convert_li(reg: u32, imm: u32) -> Vec<Bytecode> {
+    fn convert_li(reg: u32, imm: i16) -> Vec<Bytecode> {
         vec![
             Bytecode::PUSH(Value::Immediate(imm)),
             Bytecode::SETO(Value::Register(reg)),

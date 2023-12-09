@@ -93,10 +93,6 @@ pub fn addr_to_register(addr: u32) -> Option<Register> {
     }
 }
 
-pub fn pretty_print_registers() {
-
-}
-
 pub struct PrettyFmtRegister<'a>(pub &'a [u32; 32]);
 
 impl<'a> std::fmt::Debug for PrettyFmtRegister<'a> {
@@ -113,4 +109,3 @@ impl<'a> std::fmt::Debug for PrettyFmtRegister<'a> {
         .finish()
     }
 }
-

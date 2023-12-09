@@ -91,7 +91,7 @@ impl RuntimeDebugInfo {
     pub fn new() -> RuntimeDebugInfo {
         RuntimeDebugInfo {
             compile_debug_info: CompileDebugInfo::new(Vec::new()),
-            max_trace: 10,
+            max_trace: 20,
             stack_trace: Vec::new(),
         }
     }
@@ -117,7 +117,7 @@ impl RuntimeDebugInfo {
 
         debug_stack_trace.reverse();
 
-        println!("StackTrace");
+        println!("[StackTrace]");
         // loop through debug_info only print AsmInstruction that is not similar to the previous one
         let mut prev_asm_instruction: Option<AsmInstruction> = None;
         for (asm_instruction, bytecode) in debug_stack_trace {

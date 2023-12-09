@@ -1,7 +1,7 @@
 use nom_locate::LocatedSpan;
 use crate::parser::ParserVerboseError;
 use crate::err_util::map_parse_error;
-use crate::registers::{Register, register_to_addr};
+use crate::registers::register_to_addr;
 
 /// this function should check is args.len() == expected if not then call on map_parse_error
 /// and then return and propogate the error upwards to be handled by the caller

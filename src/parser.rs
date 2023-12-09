@@ -1,10 +1,8 @@
-use std::ffi::FromBytesWithNulError;
-
 use nom::{
     IResult,
     error::ParseError,
     sequence::{pair, tuple},
-    bytes::complete::{is_not, take_while}, character::complete::char, combinator::{map, recognize, all_consuming}, multi::{separated_list1, separated_list0}, branch::alt, Err,
+    bytes::complete::is_not, character::complete::char, combinator::{map, recognize}, multi::separated_list1,
 };
 use nom_locate::LocatedSpan;
 
@@ -95,7 +93,7 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
             let reg = arguments.get(0).unwrap();
             ensure_register(reg, i)?;
             let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<u32>(), Some("unable to parse immediate value"))?;
-            Ok((remaining, AsmInstruction::LI(reg.to_string(), imm)))
+            Ok((remaining, AsmInstruction::LI(reg.to_string(), imm as i16)))
         }
         "add" => {
             check_argument_counts(&arguments, 3, i)?;
@@ -177,7 +175,7 @@ mod tests {
         let input = "li $t1, 45";
         let result = parse_instruction(Span::new(input));
         assert!(result.is_ok());
-        let (i, instruction) = result.unwrap();
+        let (_, instruction) = result.unwrap();
         assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
     }
 

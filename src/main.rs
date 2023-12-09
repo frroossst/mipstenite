@@ -1,4 +1,4 @@
-use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::{CompileDebugInfo, RuntimeDebugInfo}};
+use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
 
 fn main() {
     let src = r#"
@@ -65,8 +65,6 @@ fn main() {
 		vm.init(Default::default(), byc_instructions);
 		vm.setup_debug(compile_debug_info);
 
-		println!("{:#?}", vm);
-
 
 		// TODO: remove later
 		// for testing
@@ -74,7 +72,5 @@ fn main() {
 			println!("Step {}", i);
 			vm.execute();
 		}
-
-		println!("{:#?}", vm);
 
 }
