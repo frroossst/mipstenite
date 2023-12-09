@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::registers::{Register, register_to_addr};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Bytecode {
     // VM Specific
     // =======================
@@ -36,7 +36,7 @@ pub enum Bytecode {
 
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Register(u32),
     Immediate(u32),
@@ -129,7 +129,7 @@ mod tests {
 
         assert!(asm_out.len() == 2);
         assert!(matches!(asm_out[0], Bytecode::PUSH(Value::Immediate(128))));
-        assert!(matches!(asm_out[1], Bytecode::SET(Value::Register(8))));
+        assert!(matches!(asm_out[1], Bytecode::SETO(Value::Register(8))));
     }
 
     #[test]

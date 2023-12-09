@@ -1,4 +1,4 @@
-use crate::{bytecode::Bytecode, debug_table::{RuntimeDebugInfo, CompileDebugInfo}, registers::PrettyFmtRegister};
+use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo}};
 
 #[derive(Debug)]
 struct Stack {

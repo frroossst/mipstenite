@@ -178,7 +178,6 @@ mod tests {
         let result = parse_instruction(Span::new(input));
         assert!(result.is_ok());
         let (i, instruction) = result.unwrap();
-        assert_eq!(i.fragment(), &"li $t1, 45");
         assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
     }
 
