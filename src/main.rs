@@ -1,5 +1,3 @@
-use core::panic;
-
 use clap::Parser;
 
 use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
