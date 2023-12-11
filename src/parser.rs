@@ -177,7 +177,14 @@ mod tests {
         assert!(result.is_ok());
         let (_, instruction) = result.unwrap();
         assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), 45));
+
+        let input = "li $t1, -6";
+        let result = parse_instruction(Span::new(input));
+        assert!(result.is_ok());
+        let (_, instruction) = result.unwrap();
+        assert_eq!(instruction, AsmInstruction::LI("$t1".to_string(), -6));
     }
+
 
     #[test]
     fn test_parse_instruction_multiline() {

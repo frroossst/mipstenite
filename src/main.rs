@@ -1,6 +1,36 @@
+use core::panic;
+
+use clap::Parser;
+
 use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
 
+#[derive(Debug, Parser)]
+#[clap(author, version, about)]
+struct Args {
+	#[clap(long, short, action)]
+	cleanup: bool
+}
+
 fn main() {
+
+	let args = Args::parse();
+	if args.cleanup {
+			// remove all files with numbers in the name ending with .bin extension
+			let files = std::fs::read_dir(".").unwrap();
+			for file in files {
+				let file = file.unwrap();
+				let file_name = file.file_name();
+				let file_name = file_name.to_str().unwrap();
+				if file_name.ends_with(".bin") {
+					let file_name = file_name.split(".bin").collect::<Vec<&str>>()[0];
+					if file_name.parse::<u32>().is_ok() {
+						std::fs::remove_file(file.path()).unwrap();
+					}
+				}
+			}
+		std::process::exit(0);
+		}
+
     let src = r#"
         # ------------------------------------------------------------------
         	
@@ -38,7 +68,7 @@ fn main() {
         "#;
 
         let lxr_src = r#"li $t1, 45
-		li $t2, 5
+		li $t2, -5
 		add $t3, $t1, $t2"#;
 		let result = mock_parser(lxr_src);
 		let asm_instructions: Vec<AsmInstruction>;

@@ -302,4 +302,27 @@ mod tests {
         assert!(vm.stack.peek() == None);
 
     }
+
+    #[test]
+    fn test_negative_li() {
+        let mut vm = VirtualMachine::new();
+
+        let program = vec![
+            // li $t1, 1
+            Bytecode::PUSH(Value::Immediate(-6)),
+            Bytecode::SETO(Value::Register(register_to_addr("$t1".to_string()).unwrap())),
+            Bytecode::TERMINATOR,
+        ];
+
+        vm.set_program(program);
+
+        // PUSH -6
+        vm.execute().unwrap();
+
+        // SET $t1
+        vm.execute().unwrap();
+        assert!(matches!(vm.reg_get(register_to_addr("$t1".to_string()).unwrap()) as i16, -6));
+        assert!(vm.stack.peek() == None);
+    }
+
 }
