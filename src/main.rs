@@ -1,5 +1,3 @@
-use std::io::{Write, Read};
-
 use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
 
 fn main() {
@@ -69,20 +67,10 @@ fn main() {
 		vm.setup_debug(compile_debug_info);
 
 		// Serialize the VM to a file
-		let mut file = std::fs::File::create("vm.bin").unwrap();
-		let serialized = bincode::serialize(&vm);
-		match &serialized {
-			Ok(s) => {
-				file.write_all(s).unwrap();
-			},
-			Err(e) => eprintln!("Error serializing VM: {}", e)
-		}
+		vm.dump();
 
 		// Deserialize the VM from a file
-		let mut file = std::fs::File::open("vm.bin").unwrap();
-		let mut buffer = Vec::new();
-		file.read_to_end(&mut buffer).unwrap();
-		let mut vm2: VirtualMachine = bincode::deserialize(&buffer).unwrap();
+		let mut vm2: VirtualMachine = VirtualMachine::new().load("vm.bin");
 
 		loop {
 			match vm2.execute() {

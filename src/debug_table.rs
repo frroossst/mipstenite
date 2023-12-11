@@ -1,4 +1,4 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{HashMap, BTreeMap, HashSet};
 use std::ops::Range;
 
 use serde::{Serialize, Deserialize};
@@ -34,7 +34,7 @@ impl PartialOrd for LineRange {
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct CompileDebugInfo {
-     debug_map: BTreeMap<LineRange, (AsmInstruction, Vec<Bytecode>)>,
+    debug_map: BTreeMap<LineRange, (AsmInstruction, Vec<Bytecode>)>,
     label_map: HashMap<String, usize>,
 }
 

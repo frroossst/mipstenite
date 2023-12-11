@@ -1,3 +1,5 @@
+use std::{io::Write, time::{SystemTime, UNIX_EPOCH}};
+
 use serde::{Serialize, Deserialize};
 use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo}};
 
@@ -126,6 +128,25 @@ impl VirtualMachine {
         self.runtime_dbg.attach_compile_debug_info(debug);
     }
 
+    pub fn load(&mut self, filename: &str) -> VirtualMachine {
+        let file = std::fs::File::open(filename).unwrap();
+        let vm: VirtualMachine = bincode::deserialize_from(file).unwrap();
+        vm
+    }
+
+    pub fn dump(&self) {
+        let uid = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs().to_string() + ".bin";
+		match bincode::serialize(&self) {
+            Ok(s) => {
+                let mut file = std::fs::File::create(uid).unwrap();
+                file.write_all(s.as_slice()).unwrap();
+            },
+            Err(_) => {
+                eprintln!("Error serializing VM");
+            }
+        }
+    }
+
     pub fn reg_set(&mut self,reg: u32, value: u32) {
         if reg > 32 {
             panic!("Invalid register");
@@ -185,6 +206,9 @@ impl VirtualMachine {
                 self.runtime_dbg.push_stack_trace(self.pc);
                 self.pc = where_to.to_owned() as usize;
                 return Ok(());
+            },
+            Bytecode::DUMP => {
+                self.dump();
             },
             _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
