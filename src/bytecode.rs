@@ -123,13 +123,13 @@ impl AsmInstruction {
         match self {
             AsmInstruction::LI(reg, imm) => {
                 let reg_name = register_to_addr(reg.clone()).expect("invalid register name: {reg}");
-                Self::convert_li(reg_name, imm.clone())
+                translate::convert_li(reg_name, imm.clone())
             },
             AsmInstruction::ADD(src, op1, op2) => {
                 let reg_name = register_to_addr(src.clone()).expect("invalid register name: {src}");
                 let op1_name = register_to_addr(op1.clone()).expect("invalid register name: {op1}");
                 let op2_name = register_to_addr(op2.clone()).expect("invalid register name: {op2}");
-                Self::convert_add(reg_name, op1_name, op2_name)
+                translate::convert_add(reg_name, op1_name, op2_name)
             },
             AsmInstruction::JUMP(where_to) => {
                 match where_to {
@@ -137,7 +137,7 @@ impl AsmInstruction {
                         unimplemented!()
                     },
                     WhereTo::Line(line) => { 
-                        Self::convert_jump(line.to_owned())
+                        translate::convert_jump(line.to_owned())
                     },
                 }
             },
@@ -145,29 +145,34 @@ impl AsmInstruction {
         }
     }
 
-    fn convert_li(reg: u32, imm: i16) -> Vec<Bytecode> {
+    
+
+}
+
+mod translate {
+    use super::*;
+
+    pub fn convert_li(reg: u32, imm: i16) -> Vec<Bytecode> {
         vec![
             Bytecode::PUSH(Value::Immediate(imm)),
             Bytecode::SETO(Value::Register(reg)),
         ]
     }
 
-    fn convert_add(reg: u32, op1: u32, op2: u32) -> Vec<Bytecode> {
+    pub fn convert_add(src: u32, op1: u32, op2: u32) -> Vec<Bytecode> {
         vec![
             Bytecode::GETP(Value::Register(op1)),
             Bytecode::GETP(Value::Register(op2)),
             Bytecode::ADD,
-            Bytecode::SETO(Value::Register(reg)),
+            Bytecode::SETO(Value::Register(src)),
         ]
     }
 
-    fn convert_jump(where_to: u32) -> Vec<Bytecode> {
+    pub fn convert_jump(line: u32) -> Vec<Bytecode> {
         vec![
-            Bytecode::JUMP(where_to),
+            Bytecode::JUMP(line),
         ]
     }
-
-    
 }
 
 #[cfg(test)]
