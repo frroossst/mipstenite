@@ -145,8 +145,6 @@ impl AsmInstruction {
         }
     }
 
-    
-
 }
 
 mod translate {

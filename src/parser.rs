@@ -92,8 +92,8 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
             check_argument_counts(&arguments, 2, i)?;
             let reg = arguments.get(0).unwrap();
             ensure_register(reg, i)?;
-            let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<u32>(), Some("unable to parse immediate value"))?;
-            Ok((remaining, AsmInstruction::LI(reg.to_string(), imm as i16)))
+            let imm = map_parse_error(i, || arguments.get(1).unwrap().parse::<i16>(), Some("unable to parse immediate value"))?;
+            Ok((remaining, AsmInstruction::LI(reg.to_string(), imm)))
         }
         "add" => {
             check_argument_counts(&arguments, 3, i)?;
