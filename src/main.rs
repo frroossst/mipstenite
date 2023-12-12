@@ -1,7 +1,8 @@
-use std::net::TcpListener;
+use core::panic;
+
 use clap::Parser;
 
-use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
+use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo, server::establish_connection, err_util::setup_logger};
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
@@ -14,6 +15,8 @@ struct Args {
 }
 
 fn main() {
+
+	setup_logger();
 
 	let args = Args::parse();
 	if args.cleanup {
@@ -33,17 +36,15 @@ fn main() {
 		std::process::exit(0);
 		}
 	if args.debug {
-		// establish a websocket on localhost port 3333
-		let addr = "127.0.0.1:3333";
-    	let listener = TcpListener::bind(&addr).unwrap();
-    	println!("Server listening on: {}", addr);
-
-		for stream in listener.incoming() {
-			let stream = stream.unwrap();
-			handle_connection(stream);
-		}
-
+		establish_connection();
 	}
+	panic!("panic");
+
+	log::trace!("a trace example");
+    log::debug!("deboogging");
+    log::info!("such information");
+    log::warn!("o_O");
+    log::error!("boom");
 
     let src = r#"
         # ------------------------------------------------------------------

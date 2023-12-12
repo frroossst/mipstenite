@@ -1,4 +1,5 @@
 use nom_locate::LocatedSpan;
+
 use crate::parser::ParserVerboseError;
 
 /// helper function to avoid .map_err everywhere
@@ -19,4 +20,8 @@ where
             msg: err_msg.map(|s| s.to_string()).unwrap_or(e.to_string()),
         })
     })
+}
+
+pub fn setup_logger() {
+    pretty_env_logger::init();
 }
