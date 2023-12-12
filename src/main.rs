@@ -1,3 +1,4 @@
+use std::net::TcpListener;
 use clap::Parser;
 
 use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo};
@@ -6,7 +7,10 @@ use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode:
 #[clap(author, version, about)]
 struct Args {
 	#[clap(long, short, action)]
-	cleanup: bool
+	cleanup: bool,
+
+	#[clap(long, short)]
+	debug: bool,
 }
 
 fn main() {
@@ -28,6 +32,18 @@ fn main() {
 			}
 		std::process::exit(0);
 		}
+	if args.debug {
+		// establish a websocket on localhost port 3333
+		let addr = "127.0.0.1:3333";
+    	let listener = TcpListener::bind(&addr).unwrap();
+    	println!("Server listening on: {}", addr);
+
+		for stream in listener.incoming() {
+			let stream = stream.unwrap();
+			handle_connection(stream);
+		}
+
+	}
 
     let src = r#"
         # ------------------------------------------------------------------
