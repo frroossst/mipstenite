@@ -1,5 +1,3 @@
-use core::panic;
-
 use clap::Parser;
 
 use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo, server::establish_connection, err_util::setup_logger};
@@ -101,7 +99,7 @@ fn main() {
 		byc_instructions.push(Bytecode::TERMINATOR);
 
 		let mut vm = VirtualMachine::new();
-		vm.init(Default::default(), byc_instructions);
+		vm.set_program(byc_instructions);
 		vm.setup_debug(compile_debug_info);
 
 		// Serialize the VM to a file

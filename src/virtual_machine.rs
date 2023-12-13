@@ -1,7 +1,7 @@
 use std::{io::Write, time::{SystemTime, UNIX_EPOCH}};
 
 use serde::{Serialize, Deserialize};
-use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo, MachineException}};
+use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo, MachineException}, memory::Memory};
 
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
@@ -92,7 +92,7 @@ impl Console {
 #[derive(Serialize, Deserialize)]
 pub struct VirtualMachine {
     registers: [u32; 32],
-    memory: Vec<u8>,
+    memory: Memory,
     hilo: [u32; 2],
     pc: usize,
     program: Vec<Bytecode>,
@@ -107,7 +107,7 @@ impl VirtualMachine {
         VirtualMachine {
             registers: [0; 32],
             hilo: [0; 2],
-            memory: Vec::new(),
+            memory: Memory::new(),
             pc: 0,
             program: Vec::new(),
             stack: Stack::new(),
@@ -116,13 +116,12 @@ impl VirtualMachine {
         }
     }
 
-    pub fn init(&mut self, mem: Vec<u8>, program: Vec<Bytecode>) {
-        self.memory = mem;
+    pub fn set_program(&mut self, program: Vec<Bytecode>) {
         self.program = program;
     }
 
-    pub fn set_program(&mut self, program: Vec<Bytecode>) {
-        self.program = program;
+    pub fn set_memory(&mut self, memory: &[u8]) {
+        self.memory.write(self.memory.last(), memory);
     }
 
     pub fn setup_debug(&mut self, debug: CompileDebugInfo) {
