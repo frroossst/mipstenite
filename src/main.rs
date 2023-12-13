@@ -74,7 +74,7 @@ fn main() {
         "#;
 
         let lxr_src = r#"li $t1, 45
-		li $t2, -5
+		li $t2, 5
 		add $t3, $t1, $t2"#;
 		let result = mock_parser(lxr_src);
 		let asm_instructions: Vec<AsmInstruction>;
@@ -106,17 +106,16 @@ fn main() {
 		vm.dump();
 
 		// Deserialize the VM from a file
-		let mut vm2: VirtualMachine = VirtualMachine::new().load("vm.bin");
 
 		loop {
-			match vm2.execute() {
+			match vm.execute() {
 				Ok(_) => {},
 				Err(_) => break
 			}
 		}
 
-		vm2.runtime_dbg.print_debug_info();
+		vm.runtime_dbg.print_debug_info();
 
-		println!("{:#?}", vm2);
+		println!("{:#?}", vm);
 
 }
