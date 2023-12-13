@@ -51,6 +51,8 @@ pub fn register_to_addr(reg: String) -> Option<u32> {
         "$sp" => { Some(29) }
         "$fp" => { Some(30) }
         "$ra" => { Some(31) }
+        "$hi" => { Some(32) }
+        "$lo" => { Some(33) }
         _ => { None }
     }
 }
@@ -89,6 +91,8 @@ pub fn addr_to_register(addr: u32) -> Option<Register> {
         29 => { Some(Register::new("$sp".to_string())) }
         30 => { Some(Register::new("$fp".to_string())) }
         31 => { Some(Register::new("$ra".to_string())) }
+        32 => { Some(Register::new("$hi".to_string())) }
+        33 => { Some(Register::new("$lo".to_string())) }
         _ => { None }
     }
 }

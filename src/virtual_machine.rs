@@ -1,7 +1,7 @@
 use std::{io::Write, time::{SystemTime, UNIX_EPOCH}};
 
 use serde::{Serialize, Deserialize};
-use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo}};
+use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo, MachineException}};
 
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
@@ -93,6 +93,7 @@ impl Console {
 pub struct VirtualMachine {
     registers: [u32; 32],
     memory: Vec<u8>,
+    hilo: [u32; 2],
     pc: usize,
     program: Vec<Bytecode>,
     stack: Stack,
@@ -105,6 +106,7 @@ impl VirtualMachine {
     pub fn new() -> VirtualMachine {
         VirtualMachine {
             registers: [0; 32],
+            hilo: [0; 2],
             memory: Vec::new(),
             pc: 0,
             program: Vec::new(),
@@ -148,9 +150,16 @@ impl VirtualMachine {
     }
 
     pub fn reg_set(&mut self,reg: u32, value: u32) {
-        if reg > 32 {
+        if reg > 33 {
             panic!("Invalid register");
         } else if reg == 0 {
+            return;
+        } 
+        if reg == 32 {
+            self.hilo[0] = value;
+            return;
+        } else if reg == 33 {
+            self.hilo[1] = value;
             return;
         }
         self.registers[reg as usize] = value;
@@ -159,6 +168,11 @@ impl VirtualMachine {
     pub fn reg_get(&self, reg: u32) -> u32 {
         if reg > 32 {
             panic!("Invalid register");
+        }
+        if reg == 32 {
+            return self.hilo[0];
+        } else if reg == 33 {
+            return self.hilo[1];
         }
         self.registers[reg as usize]
     }
@@ -172,9 +186,11 @@ impl VirtualMachine {
     }
 
     // only executes the next instruction
-    pub fn execute(&mut self) -> Result<(), ()> {
+    pub fn execute(&mut self) -> Result<(), MachineException> {
         if self.pc >= self.program.len() {
             panic!("Program counter out of bounds");
+        } else if self.runtime_dbg.get_exception().is_some() {
+            return Err(self.runtime_dbg.get_exception().unwrap());
         }
 
         let current_instruction = &self.program[self.pc];
@@ -200,7 +216,7 @@ impl VirtualMachine {
             },
             Bytecode::TERMINATOR => {
                 eprintln!("Reached end of program without exit instruction");
-                return Err(());
+                return Err(MachineException::AddressError);
             },
             Bytecode::JUMP(where_to) => {
                 self.runtime_dbg.push_stack_trace(self.pc);

@@ -38,13 +38,6 @@ fn main() {
 	if args.debug {
 		establish_connection();
 	}
-	panic!("panic");
-
-	log::trace!("a trace example");
-    log::debug!("deboogging");
-    log::info!("such information");
-    log::warn!("o_O");
-    log::error!("boom");
 
     let src = r#"
         # ------------------------------------------------------------------

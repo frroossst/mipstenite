@@ -65,6 +65,16 @@ impl CompileDebugInfo {
 
 }
 
+#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+pub enum MachineException {
+    AddressError,
+    Overflow,
+    Bus,
+    DivideByZero,
+}
+
+
 /// struct for debug table
 /// this stores the stack trace
 /// current instruction etc. 
@@ -75,6 +85,7 @@ pub struct RuntimeDebugInfo {
     pub compile_debug_info: CompileDebugInfo,
     max_trace: usize,
     stack_trace: Vec<usize>,
+    exception: Option<MachineException>
 }
 
 impl RuntimeDebugInfo {
@@ -84,11 +95,20 @@ impl RuntimeDebugInfo {
             compile_debug_info: CompileDebugInfo::new(Vec::new()),
             max_trace: 20,
             stack_trace: Vec::new(),
+            exception: None,
         }
     }
 
     pub fn attach_compile_debug_info(&mut self, compile_debug_info: CompileDebugInfo) {
         self.compile_debug_info = compile_debug_info;
+    }
+
+    pub fn set_exception(&mut self, exception: MachineException) {
+        self.exception = Some(exception);
+    }
+
+    pub fn get_exception(&self) -> Option<MachineException> {
+        self.exception.clone()
     }
 
     pub fn push_stack_trace(&mut self, line_number: usize) {
