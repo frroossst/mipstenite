@@ -79,7 +79,6 @@ fn main() {
 		let asm_instructions: Vec<AsmInstruction>;
 		let mut byc_translations: Vec<Vec<Bytecode>> = Vec::new();
 		if result.is_ok() {
-
 			asm_instructions = result.unwrap().1;
 		} else {
 			println!("{:#?}", result);
@@ -108,18 +107,16 @@ fn main() {
 
 		loop {
 			match vm.execute() {
-				Ok(state) => {
-					match state {
+				Ok(o) => {
+					match o {
+						MachineState::Running => {}
 						MachineState::Halted => {
 							break;
-						},
-						MachineState::Running => {
-							continue;
-						},
-					}
+						}
+					}	
 				},
-				Err(exception) => {
-					eprintln!("{:#?}", exception);
+				Err(e) => {
+					eprintln!("Error: {:?}", e);
 					break;
 				}
 			}
