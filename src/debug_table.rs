@@ -74,6 +74,13 @@ pub enum MachineException {
     DivideByZero,
 }
 
+#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+pub enum MachineState {
+    Running,
+    Halted,
+}
+
 
 /// struct for debug table
 /// this stores the stack trace

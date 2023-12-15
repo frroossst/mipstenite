@@ -1,7 +1,7 @@
 use std::{io::Write, time::{SystemTime, UNIX_EPOCH}};
 
 use serde::{Serialize, Deserialize};
-use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo, MachineException}, memory::Memory};
+use crate::{bytecode::Bytecode, registers::PrettyFmtRegister, debug_table::{RuntimeDebugInfo, CompileDebugInfo, MachineException, MachineState}, memory::Memory};
 
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
@@ -55,6 +55,17 @@ impl Console {
         Console {
             console: Vec::new(),
             location: Default::default(),
+        }
+    }
+
+    pub fn syscall(&self, v: u32) {
+        match v {
+            // print string
+            10 => {
+            },
+            _ => {
+                unimplemented!("Syscall not implemented");
+            }
         }
     }
 
@@ -185,7 +196,7 @@ impl VirtualMachine {
     }
 
     // only executes the next instruction
-    pub fn execute(&mut self) -> Result<(), MachineException> {
+    pub fn execute(&mut self) -> Result<MachineState, MachineException> {
         if self.pc >= self.program.len() {
             panic!("Program counter out of bounds");
         } else if self.runtime_dbg.get_exception().is_some() {
@@ -220,16 +231,22 @@ impl VirtualMachine {
             Bytecode::JUMP(where_to) => {
                 self.runtime_dbg.push_stack_trace(self.pc);
                 self.pc = where_to.to_owned() as usize;
-                return Ok(());
+                return Ok(MachineState::Running);
             },
             Bytecode::DUMP => {
                 self.dump();
             },
+            Bytecode::HALT => {
+                return Ok(MachineState::Halted);
+            },
+            Bytecode::SYSCALL => {
+                self.console.syscall(self.reg_get(2))
+            }
             _ => { unimplemented!("Instruction not implemented: {:?}", current_instruction) }
         }
         self.runtime_dbg.push_stack_trace(self.pc);
         self.pc += 1;
-        return Ok(());
+        return Ok(MachineState::Running);
     }
 
 }

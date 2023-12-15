@@ -204,6 +204,15 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_text_section() {
+        let input = r#".text
+        li $t0, 1
+        li $t1, 9"#;
+
+        let result = parse_instruction(Span::new(input));
+    }
+
+    #[test]
     fn test_integrated_all() {
         let _src = r#"
         # Program File: Program2-1.asm 

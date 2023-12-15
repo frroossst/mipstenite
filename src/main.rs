@@ -1,6 +1,7 @@
 use clap::Parser;
 
-use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::CompileDebugInfo, server::establish_connection, err_util::setup_logger};
+use log::error;
+use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode::{Bytecode, AsmInstruction}, debug_table::{CompileDebugInfo, MachineState}, err_util::setup_logger};
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
@@ -34,7 +35,7 @@ fn main() {
 		std::process::exit(0);
 		}
 	if args.debug {
-		establish_connection();
+		error!("not implementd");
 	}
 
     let src = r#"
@@ -73,14 +74,12 @@ fn main() {
         lf:     .asciiz	"\n"
         "#;
 
-        let lxr_src = r#"li $t1, 45
-		li $t2, 5
-		add $t3, $t1, $t2"#;
+        let lxr_src = src;
 		let result = mock_parser(lxr_src);
 		let asm_instructions: Vec<AsmInstruction>;
 		let mut byc_translations: Vec<Vec<Bytecode>> = Vec::new();
-
 		if result.is_ok() {
+
 			asm_instructions = result.unwrap().1;
 		} else {
 			println!("{:#?}", result);
@@ -109,8 +108,20 @@ fn main() {
 
 		loop {
 			match vm.execute() {
-				Ok(_) => {},
-				Err(_) => break
+				Ok(state) => {
+					match state {
+						MachineState::Halted => {
+							break;
+						},
+						MachineState::Running => {
+							continue;
+						},
+					}
+				},
+				Err(exception) => {
+					eprintln!("{:#?}", exception);
+					break;
+				}
 			}
 		}
 
