@@ -21,6 +21,45 @@ struct HalfWord {
     bytes: [u8; 2],
 }
 
+/// data assembler directive
+#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+pub enum DataDirective {
+    // stores n values in successive bytes of memory
+    Byte(u8),
+    // stores n 16 bit values in successive half words of memory
+    HalfWord(u16),
+    // stores n 32 bit values in successive words of memory
+    Word(u32),
+    // ascii string without null terminator
+    Ascii(String),
+    // ascii string with null terminator
+    AsciiZero(String),
+    // space for n bytes
+    Space(u32),
+    // aligns the next data on a word boundary
+    Align(u32),
+}
+
+/// returned by parser
+#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+pub struct DataMap {
+    name: String,
+    data: DataDirective,
+}
+
+impl DataMap {
+
+    pub fn new(name: String, data: DataDirective) -> DataMap {
+        DataMap {
+            name,
+            data,
+        }
+    }
+        
+}
+
 /// each memory write is tagged without 
 /// taking up extra space in the memory itself,
 /// this tag is useful for debugging as the memory
@@ -31,7 +70,6 @@ struct HalfWord {
 pub enum MemTag {
     String,
 }
-
 
 /// represents the memory of the system
 /// and stores the data section, the text

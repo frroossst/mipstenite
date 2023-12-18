@@ -6,7 +6,7 @@ use nom::{
 };
 use nom_locate::LocatedSpan;
 
-use crate::parser_utils::{check_argument_counts, ensure_register};
+use crate::{parser_utils::{check_argument_counts, ensure_register}, memory::{DataMap, DataDirective}};
 
 use super::bytecode::AsmInstruction;
 use super::err_util::map_parse_error;
@@ -68,6 +68,38 @@ fn consume_whitespace<'a>(i: Span<'a>) -> IResult<Span<'a>, (), ParserVerboseErr
     Ok((i, ()))
 }
 
+/// function to parse a line of data section
+fn parse_data<'a>(i: Span<'a>) -> IResult<Span<'a>, DataMap, ParserVerboseError> {
+    let stripped_src = consume_whitespace(i)?.0;
+    // all data is in the format
+    // name: .type value
+    // where type is .word, .asciiz, etc.
+
+    let (name, remaining) = recognize(tuple((is_not(":"), consume_whitespace)))(stripped_src)?;
+    let name = name.fragment().trim().to_string();
+
+    let (data_type, remaining) = recognize(tuple((is_not(" "), consume_whitespace)))(remaining)?;
+    let data_type = data_type.fragment().trim().to_string();
+
+    let (value, remaining) = recognize(tuple((is_not("\r\n"), consume_whitespace)))(remaining)?;
+    let value = value.fragment().trim().to_string();
+
+    let remaining = consume_whitespace(remaining)?.0;
+
+    match data_type.as_str() {
+        ".asciiz" => {
+            Ok((remaining, DataMap::new(name, DataDirective::AsciiZero(value))))
+        },
+        // else return error
+        _ => Err(nom::Err::Failure(ParserVerboseError {
+            line: i.location_line(),
+            column: i.get_column(),
+            input: i.fragment().to_string(),
+            msg: format!("invalid data type: {data_type}"),
+        })),
+    }
+}
+
 /// function to parse a line of assembly instructions
 fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, ParserVerboseError> {
     let stripped_src = consume_whitespace(i)?.0;
@@ -116,28 +148,26 @@ fn parse_instruction<'a>(i: Span<'a>) -> IResult<Span<'a>, AsmInstruction, Parse
 
 }
 
-pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, Vec<AsmInstruction>), nom::Err<ParserVerboseError>> {
+pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, Vec<AsmInstruction>, Vec<DataMap>), nom::Err<ParserVerboseError>> {
 
-    let mut bytecode_source = Vec::new();
-
-    let (text_section, data_section) = match (src_in.find(".text"), src_in.find(".data")) {
+    let (mut text_section, mut data_section) = match (src_in.find(".text"), src_in.find(".data")) {
         (Some(text_index), Some(data_index)) if data_index > text_index => {
-            let text_section = &src_in[text_index..data_index].trim()[..];
-            let data_section = &src_in[data_index..].trim()[..];
+            let text_section = Span::new(&src_in[text_index..data_index].trim()[..]);
+            let data_section = Span::new(&src_in[data_index..].trim()[..]);
             (text_section, data_section)
         }
         (Some(text_index), None) => {
-            let text_section = &src_in[text_index..].trim()[..];
-            ("", text_section)
+            let text_section = Span::new(&src_in[text_index..].trim()[..]);
+            (Span::new(""), text_section)
         }
         (None, Some(data_index)) => {
-            let data_section = &src_in[data_index..].trim()[..];
-            (data_section, "")
+            let data_section = Span::new(&src_in[data_index..].trim()[..]);
+            (data_section, Span::new(""))
         }
-        _ => ("", "")
+        _ => (Span::new(""), Span::new(""))
     };
 
-    if text_section == "" {
+    if text_section.fragment().is_empty() {
         return Err(nom::Err::Failure(ParserVerboseError {
             line: 0,
             column: 0,
@@ -146,19 +176,42 @@ pub fn mock_parser(src_in: &str) -> Result<(LocatedSpan<&str>, Vec<AsmInstructio
         }));
     }
 
-    let mut text_input_source = Span::new(text_section);
+    let mut datastore_source : Vec<DataMap>= Vec::new();
+    // parse data section
+    if !data_section.fragment().is_empty() {
+        loop {
+            match parse_data(data_section) {
+                Ok((remaining, parsed_result)) => {
+                    datastore_source.push(parsed_result);
 
+                    if remaining.fragment().is_empty() {
+                        break;
+                    }
+
+                    // Update the remaining input for the next iteration
+                    data_section = remaining;
+                }
+                Err(err) => {
+                    eprintln!("Parsing error: {:?}", err);
+                    return Err(err);
+                }
+            }
+        }
+    }
+
+    let mut bytecode_source = Vec::new();
+    // parse instructions
     loop {
-        match parse_instruction(text_input_source) {
+        match parse_instruction(text_section) {
             Ok((remaining, parsed_result)) => {
                 bytecode_source.push(parsed_result);
 
                 if remaining.fragment().is_empty() {
-                    return Ok((remaining, bytecode_source));
+                    return Ok((remaining, bytecode_source, datastore_source));
                 }
 
                 // Update the remaining input for the next iteration
-                text_input_source = remaining;
+                text_section = remaining;
             }
             Err(err) => {
                 eprintln!("Parsing error: {:?}", err);
