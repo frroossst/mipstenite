@@ -6,6 +6,9 @@ use mipstenite::{parser::mock_parser, virtual_machine::VirtualMachine, bytecode:
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
 struct Args {
+	#[clap(required = true)]
+	file_path: Option<String>,
+
 	#[clap(long, short, action)]
 	cleanup: bool,
 
@@ -18,6 +21,18 @@ fn main() {
 	setup_logger();
 
 	let args = Args::parse();
+	
+	// check if valid file path
+	let file_path = args.file_path.clone();
+	if file_path.is_some() {
+		let file_path = file_path.unwrap();
+		if !std::path::Path::new(&file_path).exists() {
+			error!("Invalid file path");
+			eprintln!("Invalid file path: {}", &file_path);
+			std::process::exit(1);
+		}
+	}
+
 	if args.cleanup {
 			// remove all files with numbers in the name ending with .bin extension
 			let files = std::fs::read_dir(".").unwrap();
@@ -38,7 +53,7 @@ fn main() {
 		error!("not implementd");
 	}
 
-    let src = r#"
+    let _src = r#"
         # ------------------------------------------------------------------
         	
         	.text
@@ -74,6 +89,23 @@ fn main() {
         lf:     .asciiz	"\n"
         "#;
 
+	let src = r#"
+	# Program File: Program2-1.asm 
+	# Author: Charles Kann
+	# Purpose: First program, Hello World
+	.text                   # Define the program instructions.
+	main:                   # Label to define the main program.
+	    li $v0,4            # Load 4 into $v0 to indicate a print string.
+	    la $a0, greeting    # Load the address of the greeting into $a0.
+	    syscall             # Print greeting. The print is indicated by
+	                        # $v0 having a value of 4, and the string to
+	                        # print is stored at the address in $a0.
+	    li $v0, 10          # Load a 10 (halt) into $v0.
+	    syscall             # The program ends.
+	.data                   # Define the program data.
+	greeting: .asciiz "Hello World" #The string to print.
+	"#;
+
         let lxr_src = src;
 		let result = mock_parser(lxr_src);
 		let asm_instructions: Vec<AsmInstruction>;
@@ -102,8 +134,6 @@ fn main() {
 
 		// Serialize the VM to a file
 		vm.dump();
-
-		// Deserialize the VM from a file
 
 		loop {
 			match vm.execute() {
