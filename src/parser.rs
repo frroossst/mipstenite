@@ -71,21 +71,28 @@ fn consume_whitespace<'a>(i: Span<'a>) -> IResult<Span<'a>, (), ParserVerboseErr
 /// function to parse a line of data section
 fn parse_data<'a>(i: Span<'a>) -> IResult<Span<'a>, DataMap, ParserVerboseError> {
     let stripped_src = consume_whitespace(i)?.0;
+
+    // consume `.data` directive
+    let (stripped_src, _) = recognize(tuple((char('.'), is_not("\r\n"), consume_whitespace)))(stripped_src)?;
+
     // all data is in the format
     // name: .type value
     // where type is .word, .asciiz, etc.
 
-    let (name, remaining) = recognize(tuple((is_not(":"), consume_whitespace)))(stripped_src)?;
+    // parse label name
+    let (remaining, name) = recognize(tuple((is_not(":"), consume_whitespace)))(stripped_src)?;
+    let (remaining, _) = char(':')(remaining)?;
     let name = name.fragment().trim().to_string();
 
-    let (data_type, remaining) = recognize(tuple((is_not(" "), consume_whitespace)))(remaining)?;
+    // parse data type
+    let (remaining, data_type) = recognize(tuple((is_not(" "), consume_whitespace)))(remaining)?;
     let data_type = data_type.fragment().trim().to_string();
 
-    let (value, remaining) = recognize(tuple((is_not("\r\n"), consume_whitespace)))(remaining)?;
+    // parse value
+    let (remaining, value) = recognize(tuple((is_not("\r\n"), consume_whitespace)))(remaining)?;
     let value = value.fragment().trim().to_string();
 
     let remaining = consume_whitespace(remaining)?.0;
-
     match data_type.as_str() {
         ".asciiz" => {
             Ok((remaining, DataMap::new(name, DataDirective::AsciiZero(value))))

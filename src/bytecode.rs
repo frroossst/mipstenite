@@ -114,7 +114,6 @@ impl std::str::FromStr for AsmInstruction {
             _ => Err(format!("invalid instruction: {s}"))
         }
     }
-
 }
 
 impl AsmInstruction {
